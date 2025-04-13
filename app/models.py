@@ -1,6 +1,6 @@
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Boolean, text
-from sqlalchemy.orm import relationship
-from app.databse import Base
+from sqlalchemy import Column, DateTime, Integer, String, text
+from app.database import Base
+
 
 class User(Base):
     __tablename__ = "users"
@@ -10,4 +10,3 @@ class User(Base):
     created_at = Column(
         DateTime(timezone=True), nullable=False, server_default=text("now()")
     )
-

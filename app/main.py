@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from .routers import auth
+from .routers import auth, user
 
 # Initialize FastAPI app
 app = FastAPI()
@@ -21,9 +21,10 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     )
 
 
-# app.include_router(auth.router)
+app.include_router(auth.router)
+app.include_router(user.router)
 
 
 @app.get("/")
 def root():
-    return {"message": "This is a Inta Clone project"}
+    return {"message": "This is a Inta clone project"}
