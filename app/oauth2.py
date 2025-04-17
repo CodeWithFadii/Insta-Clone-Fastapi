@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from uuid import UUID
 from fastapi import Depends, HTTPException, status
 from jose import jwt, JWTError
 from fastapi.security import OAuth2PasswordBearer
@@ -20,16 +21,17 @@ def create_access_token(data: dict):
     to_encode = data.copy()
     expire_time = datetime.now() + timedelta(days=ACCESS_TOKEN_EXPIRE_DAYS)
     to_encode.update({"exp": expire_time})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM) # type: ignore
     return encoded_jwt
 
 
 def verify_access_token(token: str, exception):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        id: str = payload["user_id"]
+        id: UUID = payload["user_id"]
         if id is None:
             raise exception
+
         token_data = schemas.TokenData(id=id)
     except JWTError:
         raise exception

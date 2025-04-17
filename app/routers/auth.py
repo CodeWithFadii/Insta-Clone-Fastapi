@@ -26,7 +26,7 @@ def login(credential: schemas.UserLogin, db: Session = Depends(get_db)):
                 detail="Invalid Credentials",
             )
 
-        access_token = oauth2.create_access_token({"user_id": user.id})
+        access_token = oauth2.create_access_token({"user_id": str(user.id)})
 
         return schemas.UserAuthOut(
             access_token=access_token,

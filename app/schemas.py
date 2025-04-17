@@ -1,5 +1,6 @@
 from datetime import datetime
-from typing import Optional
+from typing import List, Optional
+from uuid import UUID
 from pydantic import BaseModel, EmailStr
 
 
@@ -12,6 +13,7 @@ class UserBase(BaseModel):
 
 
 class UserRegister(UserBase):
+    name: str
     pass
 
 
@@ -20,11 +22,17 @@ class UserLogin(UserBase):
 
 
 class User(BaseModel):
-    id: int
+    id: UUID
     email: str
+    name: str
+    user_name: Optional[str] = "null"
+    profile_img: Optional[str] = "null"
+    followers: int
+    followings: int
+    posts: int
     created_at: datetime
 
-    model_config = {"from_attributes": True}  # tells Pydantic to allow ORM objects
+    model_config = {"from_attributes": True, "json_encoders": {UUID: lambda v: str(v)}}
 
 
 class UserOut(BaseModel):
@@ -41,9 +49,18 @@ class UserAuthOut(BaseModel):
 
 
 class TokenData(BaseModel):
-    id: Optional[str] = None
+    id: Optional[UUID] = None
 
 
 class Token(BaseModel):
     access_token: str
     token_type: str
+
+
+# Pagination schema------------------   
+
+
+class PaginatedUsers(BaseModel):
+    users: List[User]
+    total_count: int
+    next_cursor: Optional[UUID]
