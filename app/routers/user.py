@@ -1,7 +1,8 @@
 from typing import List, Optional
 from uuid import UUID
-from fastapi import Depends, HTTPException, status, APIRouter
+from fastapi import Depends, File, HTTPException, UploadFile, status, APIRouter
 from sqlalchemy.orm import Session
+import fitz
 from app import models, oauth2, schemas, utils
 from app.database import get_db
 
@@ -20,6 +21,29 @@ def get_current_user(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"An error occurred: {str(e)}",
         )
+
+
+@router.post("/read-pdf")
+async def read_pdf(file: UploadFile = File(...)):
+    if not file.content_type == "application/pdf":
+        raise HTTPException(status_code=400, detail="Please upload a PDF file.")
+
+    try:
+        contents = await file.read()
+
+        # Load the PDF from bytes
+        pdf = fitz.open(stream=contents, filetype="pdf")
+
+        # Extract text from all pages
+        text = ""
+        for page in pdf:
+            text += page.get_text()  # type: ignore
+
+        cleaned_text = text.strip()
+        return {"text": cleaned_text}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to read PDF: {str(e)}")
 
 
 # Getting a user by ID
