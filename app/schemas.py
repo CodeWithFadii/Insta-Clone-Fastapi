@@ -57,10 +57,16 @@ class Token(BaseModel):
     token_type: str
 
 
-# Pagination schema------------------   
+# Pagination schema------------------
 
 
 class PaginatedUsers(BaseModel):
     users: List[User]
     total_count: int
     next_cursor: Optional[UUID]
+
+
+class ExtractionResult(BaseModel):
+    filename: str
+    text: str | None = None  # Optional text field
+    error: str | None = None

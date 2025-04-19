@@ -23,27 +23,49 @@ def get_current_user(
         )
 
 
-@router.post("/read-pdf")
-async def read_pdf(file: UploadFile = File(...)):
-    if not file.content_type == "application/pdf":
-        raise HTTPException(status_code=400, detail="Please upload a PDF file.")
+@router.post("/read-pdf", response_model=List[schemas.ExtractionResult])
+async def read_pdf(files: List[UploadFile] = File(...)):
+    # Check if any files were uploaded
+    if not files:
+        raise HTTPException(status_code=400, detail="No files uploaded.")
 
-    try:
-        contents = await file.read()
+    results = []
+    for file in files:
+        # Validate that the file is a PDF
+        if file.content_type != "application/pdf":
+            results.append(
+                schemas.ExtractionResult(filename=file.filename, error="Not a PDF file.")  # type: ignore
+            )
+            continue
 
-        # Load the PDF from bytes
-        pdf = fitz.open(stream=contents, filetype="pdf")
+        try:
+            # Read the file contents asynchronously
+            contents = await file.read()
 
-        # Extract text from all pages
-        text = ""
-        for page in pdf:
-            text += page.get_text()  # type: ignore
+            # Load the PDF from bytes
+            pdf = fitz.open(stream=contents, filetype="pdf")
 
-        cleaned_text = text.strip()
-        return {"text": cleaned_text}
+            # Extract text from all pages
+            text = ""
+            for page in pdf:
+                text += page.get_text()  # type: ignore
 
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to read PDF: {str(e)}")
+            # Clean the extracted text
+            cleaned_text = text.strip()
+
+            # Close the PDF to free resources
+            pdf.close()
+
+            # Add successful extraction to results
+            results.append(schemas.ExtractionResult(filename=file.filename, text=cleaned_text))  # type: ignore
+
+        except Exception as e:
+            # Add error information if processing fails
+            results.append(
+                schemas.ExtractionResult(filename=file.filename, error=str(e))  # type: ignore
+            )
+
+    return results
 
 
 # Getting a user by ID
